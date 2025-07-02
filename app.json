@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "FastImage - AI Image Generator",
+    "slug": "fastimage-ai-generator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/fastimage.jpg",
+    "scheme": "fastimage",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "description": "Generate stunning AI images with text prompts. Features Diamond Dash game and modern Apple-style design.",
+    "privacy": "public",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fastimage.aigeneration"
+    },
+    "android": {
+      "package": "com.fastimage.aigeneration",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/fastimage.jpg",
+        "backgroundColor": "#F5F5DC"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "INTERNET",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/fastimage.jpg"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/fastimage.jpg",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F5F5DC"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow FastImage to save generated images to your photo library.",
+          "savePhotosPermission": "Allow FastImage to save AI-generated images to your photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
+  }
+}
