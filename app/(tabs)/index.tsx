@@ -94,7 +94,7 @@ export default function ImageGeneratorScreen() {
         model: selectedModel,
         nologo: 'true',
         enhance: enhanceEnabled ? 'true' : 'false',
-        token: "3G9MYD0KtswXWJoJ"
+        token: "yourtoken"
 
       };
 
