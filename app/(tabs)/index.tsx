@@ -31,7 +31,6 @@ interface GenerationParams {
   model: Model;
   nologo: string;
   enhance: string;
-  token: string;
   safe: string;
 }
 
@@ -107,7 +106,6 @@ export default function ImageGeneratorScreen() {
         nologo: 'true',
         safe: 'true',
         enhance: enhanceEnabled ? 'true' : 'false',
-        token: "yourtoken"
 
       };
 
