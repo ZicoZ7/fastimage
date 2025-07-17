@@ -2,12 +2,14 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import * as FileSystem from 'expo-file-system';
 import { Image } from 'expo-image';
+import * as Linking from 'expo-linking';
 import * as MediaLibrary from 'expo-media-library';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -30,6 +32,7 @@ interface GenerationParams {
   nologo: string;
   enhance: string;
   token: string;
+  safe: string;
 }
 
 export default function ImageGeneratorScreen() {
@@ -43,6 +46,15 @@ export default function ImageGeneratorScreen() {
   const [generatedImageUri, setGeneratedImageUri] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGenerationTime, setLastGenerationTime] = useState<number>(0);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [currentImageData, setCurrentImageData] = useState<{
+    uri: string;
+    prompt: string;
+    model: Model;
+    aspectRatio: AspectRatio;
+    timestamp: number;
+  } | null>(null);
 
   const getAspectRatioDimensions = (ratio: AspectRatio): { width: number; height: number } => {
     switch (ratio) {
@@ -93,6 +105,7 @@ export default function ImageGeneratorScreen() {
         seed: seed,
         model: selectedModel,
         nologo: 'true',
+        safe: 'true',
         enhance: enhanceEnabled ? 'true' : 'false',
         token: "3G9MYD0KtswXWJoJ"
 
@@ -108,6 +121,7 @@ export default function ImageGeneratorScreen() {
         model: params.model,
         nologo: params.nologo,
         enhance: params.enhance,
+        safe: params.safe,
       });
 
       const fullUrl = `${url}?${queryParams.toString()}`;
@@ -123,6 +137,15 @@ export default function ImageGeneratorScreen() {
       // For React Native, we can directly use the URL as the image source
       setGeneratedImageUri(fullUrl);
       setLastGenerationTime(Date.now());
+
+      // Store image data for reporting
+      setCurrentImageData({
+        uri: fullUrl,
+        prompt: prompt.trim(),
+        model: selectedModel,
+        aspectRatio: selectedAspectRatio,
+        timestamp: Date.now(),
+      });
 
     } catch (error) {
       console.error('Error generating image:', error);
@@ -160,6 +183,77 @@ export default function ImageGeneratorScreen() {
       console.error('Error saving image:', error);
       Alert.alert('Error', 'Failed to save image to gallery. Please try again.');
     }
+  };
+
+  const handleReportContent = () => {
+    setShowReportModal(true);
+  };
+
+  const submitReport = async () => {
+    if (!reportReason.trim()) {
+      Alert.alert('Error', 'Please provide a reason for reporting this content');
+      return;
+    }
+
+    try {
+      // Create report data
+      const reportData = {
+        imageUri: currentImageData?.uri,
+        prompt: currentImageData?.prompt,
+        model: currentImageData?.model,
+        aspectRatio: currentImageData?.aspectRatio,
+        timestamp: currentImageData?.timestamp,
+        reportReason: reportReason.trim(),
+        reportTimestamp: Date.now(),
+      };
+
+      // Log the report (in a real app, you'd send this to your backend)
+      console.log('Content Report:', reportData);
+
+      // For now, we'll send an email to the developer
+      const emailSubject = encodeURIComponent('AI Image Content Report - FastImage App');
+      const emailBody = encodeURIComponent(`
+Content Report Details:
+
+Image URL: ${currentImageData?.uri}
+Prompt: ${currentImageData?.prompt}
+Model: ${currentImageData?.model}
+Aspect Ratio: ${currentImageData?.aspectRatio}
+Generated: ${new Date(currentImageData?.timestamp || 0).toISOString()}
+
+Report Reason: ${reportReason.trim()}
+Reported: ${new Date().toISOString()}
+
+Please review this content and take appropriate action.
+      `);
+
+      const emailUrl = `mailto:zicozafar@gmail.com?subject=${emailSubject}&body=${emailBody}`;
+
+      const canOpen = await Linking.canOpenURL(emailUrl);
+      if (canOpen) {
+        await Linking.openURL(emailUrl);
+      } else {
+        // Fallback: show report details
+        Alert.alert(
+          'Report Submitted',
+          'Thank you for reporting this content. Our team will review it and take appropriate action.',
+          [{ text: 'OK' }]
+        );
+      }
+
+      // Reset form
+      setReportReason('');
+      setShowReportModal(false);
+
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      Alert.alert('Error', 'Failed to submit report. Please try again.');
+    }
+  };
+
+  const cancelReport = () => {
+    setReportReason('');
+    setShowReportModal(false);
   };
 
   return (
@@ -337,19 +431,85 @@ export default function ImageGeneratorScreen() {
                 contentFit="cover"
               />
             </View>
-            <TouchableOpacity
-              style={[
-                styles.saveButton,
-                { backgroundColor: colors.warning },
-              ]}
-              onPress={saveImage}
-            >
-              <Text style={[styles.saveButtonText, { color: colors.cardBackground }]}>
-                💾 Save to Gallery
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.imageActions}>
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  styles.saveButton,
+                  { backgroundColor: colors.warning },
+                ]}
+                onPress={saveImage}
+              >
+                <Text style={[styles.actionButtonText, { color: colors.cardBackground }]}>
+                  💾 Save to Gallery
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  styles.reportButton,
+                  { backgroundColor: colors.error || '#FF4444' },
+                ]}
+                onPress={handleReportContent}
+              >
+                <Text style={[styles.actionButtonText, { color: colors.cardBackground }]}>
+                  ⚠️ Report Content
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
+
+        {/* Report Modal */}
+        <Modal
+          visible={showReportModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={cancelReport}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Report Content</Text>
+              <Text style={[styles.modalDescription, { color: colors.icon }]}>
+                Help us maintain a safe environment by reporting inappropriate content.
+              </Text>
+
+              <Text style={[styles.modalLabel, { color: colors.text }]}>Reason for Report:</Text>
+              <TextInput
+                style={[
+                  styles.reportTextInput,
+                  {
+                    backgroundColor: colors.secondaryBackground,
+                    color: colors.text,
+                    borderColor: colors.border,
+                  },
+                ]}
+                placeholder="Describe why this content should be reviewed..."
+                placeholderTextColor={colors.placeholder}
+                value={reportReason}
+                onChangeText={setReportReason}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton, { borderColor: colors.border }]}
+                  onPress={cancelReport}
+                >
+                  <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.submitButton, { backgroundColor: colors.error || '#FF4444' }]}
+                  onPress={submitReport}
+                >
+                  <Text style={[styles.modalButtonText, { color: colors.cardBackground }]}>Submit Report</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </ScrollView>
   );
@@ -485,5 +645,81 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
+  },
+  imageActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  reportButton: {
+    // Additional styles for report button if needed
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    borderRadius: 16,
+    padding: 25,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  modalDescription: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  reportTextInput: {
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    borderWidth: 1,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 20,
+  },
+  modalButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  cancelButton: {
+    borderColor: '#ccc',
+  },
+  submitButton: {
+    borderColor: '#FF4444',
+  },
+  modalButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
   },
 });

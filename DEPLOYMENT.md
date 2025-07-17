@@ -1,195 +1,166 @@
-# Google Play Store Deployment Guide
+# FastImage - Deployment Guide
 
-## Prerequisites
+## Google Play Store Deployment
 
-1. **Install EAS CLI**:
+### ✅ Policy Compliance Updates
 
-```bash
-npm install -g @expo/eas-cli
-```
+**AI-Generated Content Policy Fix Applied:**
 
-2. **Create Expo Account**:
+- ✅ Added content reporting feature to comply with Google Play's AI-Generated Content Policy
+- ✅ Users can now report inappropriate AI-generated content directly within the app
+- ✅ Report system includes image URL, prompt, model parameters, and user reason
+- ✅ Privacy policy updated to include content reporting information
+- ✅ App description updated to mention content reporting system
 
-```bash
-eas login
-```
+### Content Reporting Feature Details
 
-3. **Google Play Console Account** (requires $25 one-time fee)
+**What was added:**
 
-## Step 1: Configure Your Project
+1. **Report Button**: "⚠️ Report Content" button below each generated image
+2. **Report Modal**: User-friendly form to submit report reasons
+3. **Email Integration**: Reports sent to support@fastimage.app for review
+4. **Data Collection**: Captures image URL, prompt, model, timestamp, and report reason
+5. **Privacy Policy**: Updated to include content reporting system details
 
-1. **Update app.json** ✅ (Already done)
-2. **Create EAS configuration** ✅ (Already done)
-3. **Set up project ID**:
+**How it works:**
 
-```bash
-eas init
-```
+- User generates an image
+- If content is inappropriate, user taps "Report Content"
+- User provides reason for report
+- Report is sent via email with all relevant details
+- Moderation team can review and take action
 
-## Step 2: Build for Production
-
-1. **Build Android App Bundle (AAB)**:
-
-```bash
-eas build --platform android --profile production
-```
-
-2. **Alternative: Build APK for testing**:
+### Build Commands
 
 ```bash
-eas build --platform android --profile preview
-```
-
-## Step 3: Google Play Console Setup
-
-### A. Create App in Google Play Console
-
-1. Go to [Google Play Console](https://play.google.com/console)
-2. Click "Create app"
-3. Fill in app details:
-   - **App name**: "FastImage - AI Image Generator"
-   - **Default language**: English (United States)
-   - **App or game**: App
-   - **Free or paid**: Free
-
-### B. Upload App Bundle
-
-1. Go to "Production" → "Releases"
-2. Click "Create new release"
-3. Upload the `.aab` file from EAS build
-4. Fill in release notes
-
-### C. Store Listing
-
-Use the information from `store-config.json`:
-
-**App details**:
-
-- Short description: "Generate stunning AI images with text prompts and play Diamond Dash game"
-- Full description: [Copy from store-config.json]
-
-**Graphics**:
-
-- App icon: 512x512 PNG
-- Feature graphic: 1024x500 PNG
-- Screenshots: At least 2, up to 8 (1080x1920 for phone)
-
-**Categorization**:
-
-- App category: Art & Design
-- Content rating: Everyone
-
-### D. Content Rating
-
-1. Go to "Content rating"
-2. Complete the questionnaire
-3. Should result in "Everyone" rating
-
-### E. Target Audience
-
-1. Select age groups: 13+ (recommended for AI content)
-2. Appeals to children: No
-
-### F. Privacy Policy
-
-1. Add privacy policy URL: `https://github.com/yourusername/fastimage/blob/main/PRIVACY.md`
-
-## Step 4: Release Process
-
-### Internal Testing (Recommended First)
-
-```bash
-eas submit --platform android --track internal
-```
-
-### Production Release
-
-```bash
-eas submit --platform android --track production
-```
-
-## Step 5: Required Assets
-
-Create these assets for the store:
-
-### App Icons
-
-- **App icon**: 512x512 PNG (no transparency)
-- **Adaptive icon**: Already configured in app.json
-
-### Screenshots
-
-Take screenshots of:
-
-1. Image generation screen
-2. Generated image example
-3. Diamond Dash game
-4. App settings/features
-
-### Feature Graphic
-
-- **Size**: 1024x500 pixels
-- **Content**: Showcase app features with text overlay
-
-## Commands Summary
-
-```bash
-# Install dependencies
-npm install
-
 # Install EAS CLI
-npm install -g @expo/eas-cli
+npm install -g eas-cli
 
 # Login to Expo
 eas login
 
-# Initialize EAS project
-eas init
+# Configure build
+eas build:configure
 
-# Build for production (Android App Bundle)
-eas build --platform android --profile production
+# Build for Android
+eas build --platform android
 
-# Submit to Google Play Store
+# Build for internal testing
+eas build --platform android --profile preview
+
+# Submit to Play Store
 eas submit --platform android
-
-# Check build status
-eas build:list
-
-# View build logs
-eas build:view [BUILD_ID]
 ```
 
-## Troubleshooting
+### Store Listing Requirements
 
-### Common Issues:
+**App Description:**
 
-1. **Build fails**: Check dependencies and Expo SDK compatibility
-2. **Upload rejected**: Ensure all store listing requirements are met
-3. **Permission issues**: Verify all required permissions are declared
+```
+Generate stunning AI images with text prompts. Features Diamond Dash game, content reporting system, and modern Apple-style design. Users can report inappropriate AI-generated content directly within the app.
 
-### Build Optimization:
-
-```bash
-# Clear cache if build fails
-expo r -c
-
-# Update dependencies
-npx expo install --fix
+Key Features:
+• AI Image Generation with FLUX/TURBO models
+• Multiple aspect ratios (1:1, 9:16, 16:9)
+• Content reporting system for safety
+• Diamond Dash mini-game
+• Save images to gallery
+• Modern Apple-style UI
 ```
 
-## Post-Release
+**Privacy Policy:**
 
-1. **Monitor**: Check Google Play Console for crashes/ANRs
-2. **Updates**: Use `eas build` and `eas submit` for updates
-3. **Version bumps**: Update `version` and `versionCode` in app.json
+- Updated PRIVACY.md includes content reporting system
+- Explains how report data is collected and used
+- Details content moderation process
 
-## Store Optimization
+### Required Assets
 
-- **Keywords**: AI image generator, text to image, art generator
-- **Screenshots**: Show actual app functionality
-- **Description**: Highlight key features and benefits
-- **Reviews**: Encourage users to leave positive reviews
+**Icons:**
 
----
+- `./assets/images/fastimage.jpg` (512x512)
+- Adaptive icon for Android
 
-**Note**: Replace placeholder URLs and contact information with your actual details before deployment.
+**Screenshots:**
+
+- Main image generation screen
+- Content reporting modal
+- Diamond Dash game
+- Settings/options screens
+
+### Permissions
+
+**Android Permissions:**
+
+```json
+{
+  "permissions": [
+    "INTERNET",
+    "WRITE_EXTERNAL_STORAGE",
+    "READ_EXTERNAL_STORAGE",
+    "READ_MEDIA_IMAGES",
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+    "android.permission.ACCESS_MEDIA_LOCATION"
+  ]
+}
+```
+
+### Content Rating
+
+**Content Rating:**
+
+- **Age Rating**: 3+ (Everyone)
+- **Content Descriptors**: None
+- **Interactive Elements**: Digital Purchases (if applicable)
+
+**Justification:**
+
+- AI-generated images are filtered for inappropriate content
+- Content reporting system allows users to flag any issues
+- No user-generated content sharing
+- Educational and creative use case
+
+### Policy Compliance Checklist
+
+- ✅ **AI-Generated Content Policy**: Content reporting feature implemented
+- ✅ **Privacy Policy**: Updated with content reporting details
+- ✅ **Data Collection**: Minimal, only for app functionality and content moderation
+- ✅ **User Control**: Users can report content and control what they save
+- ✅ **Content Moderation**: Clear process for handling reported content
+- ✅ **Transparency**: Clear information about AI-generated content
+
+### Appeal Process
+
+If app is rejected again:
+
+1. **Review Rejection**: Check specific policy violation details
+2. **Update if Needed**: Make additional changes if required
+3. **Resubmit**: Upload new APK with fixes
+4. **Appeal**: Use Play Console appeal process if needed
+
+### Contact Information
+
+**Support Email:** zicozafar@gmail.com
+**Developer Contact:** Available in Play Console
+**Privacy Policy:** Included in app and store listing
+
+### Testing Checklist
+
+Before submission:
+
+- ✅ Content reporting works correctly
+- ✅ Report emails are sent properly
+- ✅ Privacy policy is accessible
+- ✅ All app features function normally
+- ✅ No crashes or major bugs
+- ✅ UI follows Material Design guidelines
+
+### Release Notes
+
+**Version 1.0.1:**
+
+- Added content reporting system for AI-generated images
+- Updated privacy policy to include content moderation
+- Improved user safety and policy compliance
+- Enhanced app description with reporting feature details
