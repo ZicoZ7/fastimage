@@ -107,7 +107,7 @@ export default function ImageGeneratorScreen() {
         nologo: 'true',
         safe: 'true',
         enhance: enhanceEnabled ? 'true' : 'false',
-        token: "3G9MYD0KtswXWJoJ"
+        token: "yourtoken"
 
       };
 
